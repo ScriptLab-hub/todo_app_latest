@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simple ToDo App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+    <h1 class="text-xl font-bold mb-4 text-center">📝 My ToDo List</h1>
+
+    <!-- Search Bar -->
+    <div class="mb-4">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search task"
+        oninput="renderTasks()"
+        class="w-full px-3 py-2 border border-gray-300 rounded"
+      />
+    </div>
+
+    <!-- Task Input Field -->
+    <div class="flex gap-2 mb-4">
+      <input
+        id="taskInput"
+        type="text"
+        placeholder="Enter a task"
+        class="flex-1 px-3 py-2 border border-gray-300 rounded"
+        onkeydown="handleKey(event)"
+      />
+      <button
+        onclick="addTask()"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Add
+      </button>
+    </div>
+
+    <ul id="taskList" class="space-y-2"></ul>
+  </div>
+
+  <script>
+    var tasks = [];
+
+    function handleKey(event) {
+      if (event.key === "Enter") {
+        addTask();
+      }
+    }
+
+    function addTask() {
+      var input = document.getElementById("taskInput");
+      var text = input.value.trim();
+
+      if (text === "") {
+        alert("Please enter a task");
+        return;
+      }
+
+      tasks.unshift({
+        text: text,
+        completed: false
+      });
+
+      input.value = "";
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      renderTasks();
+    }
+
+    function toggleComplete(index) {
+      tasks[index].completed = !tasks[index].completed;
+      renderTasks();
+    }
+
+    function editTask(index) {
+      var li = document.getElementById("task-" + index);
+      var task = tasks[index];
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.value = task.text;
+      input.className = "flex-1 px-2 py-1 border rounded";
+      input.id = "edit-input-" + index;
+      input.setAttribute("onkeydown", "saveOnEnter(event, " + index + ")");
+
+      var saveBtn = document.createElement("button");
+      saveBtn.textContent = "✅";
+      saveBtn.className = "text-green-500 hover:text-green-700";
+      saveBtn.setAttribute("onclick", "saveEdit(" + index + ")");
+
+      var btnGroup = li.querySelector("div");
+      btnGroup.innerHTML = "";
+      btnGroup.appendChild(saveBtn);
+
+      var span = li.querySelector("span");
+      li.replaceChild(input, span);
+    }
+
+    function saveEdit(index) {
+      var input = document.getElementById("edit-input-" + index);
+      var newText = input.value.trim();
+      if (newText === "") {
+        alert("Task cannot be empty.");
+        return;
+      }
+      tasks[index].text = newText;
+      renderTasks();
+    }
+
+    function saveOnEnter(event, index) {
+      if (event.key === "Enter") {
+        saveEdit(index);
+      }
+    }
+
+    function renderTasks() {
+      var list = document.getElementById("taskList");
+      var queryInput = document.getElementById("searchInput");
+      var query = queryInput.value.toLowerCase();
+      list.innerHTML = "";
+
+      for (var i = 0; i < tasks.length; i++) {
+        var task = tasks[i];
+
+        if (!task || !task.text || typeof task.text !== "string") {
+          continue;
+        }
+
+        if (!task.text.toLowerCase().includes(query)) {
+          continue;
+        }
+
+        var li = document.createElement("li");
+        li.id = "task-" + i;
+        li.className = "flex justify-between items-center bg-gray-100 px-3 py-2 rounded w-full";
+
+        var textSpan = document.createElement("span");
+        textSpan.textContent = task.text;
+        textSpan.className = "flex-1 min-w-0 break-words mr-2 cursor-pointer";
+        if (task.completed) {
+          textSpan.classList.add("line-through", "text-gray-400");
+        }
+        textSpan.setAttribute("onclick", "toggleComplete(" + i + ")");
+
+        var btnGroup = document.createElement("div");
+        btnGroup.className = "flex gap-2 flex-shrink-0";
+
+        var editBtn = document.createElement("button");
+        editBtn.textContent = "🛠️";
+        editBtn.className = "text-green-500 hover:text-green-700";
+        editBtn.setAttribute("onclick", "editTask(" + i + ")");
+
+        var delBtn = document.createElement("button");
+        delBtn.textContent = "🗑️";
+        delBtn.className = "text-red-500 hover:text-red-700";
+        delBtn.setAttribute("onclick", "deleteTask(" + i + ")");
+
+        btnGroup.appendChild(editBtn);
+        btnGroup.appendChild(delBtn);
+
+        li.appendChild(textSpan);
+        li.appendChild(btnGroup);
+        list.appendChild(li);
+      }
+    }
+  </script>
+</body>
+</html>
